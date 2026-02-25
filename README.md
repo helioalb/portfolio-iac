@@ -8,6 +8,7 @@ Infrastructure as Code para o projeto Portfolio, gerenciado via [Terraform Cloud
 - **Subnet pública** — Subnet com rota para Internet Gateway.
 - **Internet Gateway** — Acesso à internet para a subnet pública.
 - **EC2 Instance** — Amazon Linux 2023, com IMDSv2, volume EBS criptografado e monitoramento detalhado habilitado.
+- **Docker** — Docker e Docker Compose instalados automaticamente via user data script.
 - **Security Group** — Regras de ingress configuráveis para HTTP, HTTPS e SSH, com egress aberto.
 
 ## Estrutura do projeto
@@ -19,6 +20,7 @@ Infrastructure as Code para o projeto Portfolio, gerenciado via [Terraform Cloud
 | `variables.tf` | Declaração de variáveis |
 | `main.tf` | VPC, subnet, internet gateway, security group e instância EC2 |
 | `outputs.tf` | Outputs da infraestrutura |
+| `user_data.sh` | Script de inicialização para instalar Docker e Docker Compose |
 | `example.tfvars` | Exemplo de valores para variáveis |
 
 ## Pré-requisitos
@@ -62,3 +64,25 @@ terraform apply
 | `allowed_ssh_cidrs` | CIDRs permitidos para SSH | `[]` |
 | `allowed_http_cidrs` | CIDRs permitidos para HTTP | `["0.0.0.0/0"]` |
 | `allowed_https_cidrs` | CIDRs permitidos para HTTPS | `["0.0.0.0/0"]` |
+| `enable_docker` | Instalar Docker na instância | `true` |
+
+## Docker
+
+Se `enable_docker = true` (padrão), Docker e Docker Compose são instalados automaticamente na instância via `user_data.sh`.
+
+### Conexão SSH
+
+```bash
+ssh -i /path/to/key.pem ec2-user@<instance_public_ip>
+```
+
+### Verificar Docker
+
+```bash
+docker --version
+docker-compose --version
+docker ps
+```
+
+O usuário `ec2-user` é adicionado ao grupo `docker` automaticamente, permitindo usar Docker sem `sudo`.
+

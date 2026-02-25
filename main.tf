@@ -136,8 +136,12 @@ resource "aws_vpc_security_group_ingress_rule" "ssh" {
 }
 
 ################################################################################
-# EC2 Instance
+# User Data Script
 ################################################################################
+
+locals {
+  user_data = var.enable_docker ? base64encode(templatefile("${path.module}/user_data.sh", {})) : null
+}
 
 resource "aws_instance" "this" {
   ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux.id
@@ -147,6 +151,8 @@ resource "aws_instance" "this" {
   key_name               = var.key_pair_name != "" ? var.key_pair_name : null
 
   associate_public_ip_address = var.associate_public_ip
+
+  user_data = local.user_data
 
   metadata_options {
     http_endpoint = "enabled"

@@ -103,3 +103,13 @@ variable "allowed_https_cidrs" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+################################################################################
+# Docker
+################################################################################
+
+variable "enable_docker" {
+  description = "Whether to install Docker on the EC2 instance"
+  type        = bool
+  default     = true
+}
