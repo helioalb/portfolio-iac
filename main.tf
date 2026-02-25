@@ -42,12 +42,23 @@ resource "aws_vpc" "this" {
 
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.this.id
-  cidr_block              = var.subnet_cidr
+  cidr_block              = var.public_subnet_cidr
   availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = var.associate_public_ip
 
   tags = {
     Name = "${var.project_name}-public-subnet"
+  }
+}
+
+resource "aws_subnet" "private" {
+  vpc_id                  = aws_vpc.this.id
+  cidr_block              = var.private_subnet_cidr
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "${var.project_name}-private-subnet"
   }
 }
 
@@ -72,9 +83,22 @@ resource "aws_route_table" "public" {
   }
 }
 
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.this.id
+
+  tags = {
+    Name = "${var.project_name}-private-rt"
+  }
+}
+
 resource "aws_route_table_association" "public" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.private.id
 }
 
 ################################################################################
@@ -152,7 +176,7 @@ resource "aws_instance" "this" {
 
   associate_public_ip_address = var.associate_public_ip
 
-  user_data = local.user_data
+  user_data_base64 = local.user_data
 
   metadata_options {
     http_endpoint = "enabled"
