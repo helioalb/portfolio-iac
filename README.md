@@ -4,6 +4,9 @@ Infrastructure as Code para o projeto Portfolio, gerenciado via [Terraform Cloud
 
 ## Recursos
 
+- **VPC** — VPC dedicada com DNS support e DNS hostnames habilitados.
+- **Subnet pública** — Subnet com rota para Internet Gateway.
+- **Internet Gateway** — Acesso à internet para a subnet pública.
 - **EC2 Instance** — Amazon Linux 2023, com IMDSv2, volume EBS criptografado e monitoramento detalhado habilitado.
 - **Security Group** — Regras de ingress configuráveis para HTTP, HTTPS e SSH, com egress aberto.
 
@@ -14,7 +17,7 @@ Infrastructure as Code para o projeto Portfolio, gerenciado via [Terraform Cloud
 | `versions.tf` | Terraform Cloud backend, versão do Terraform e providers |
 | `providers.tf` | Configuração do provider AWS com `default_tags` e `allowed_account_ids` |
 | `variables.tf` | Declaração de variáveis |
-| `main.tf` | Data sources, security group e instância EC2 |
+| `main.tf` | VPC, subnet, internet gateway, security group e instância EC2 |
 | `outputs.tf` | Outputs da infraestrutura |
 | `example.tfvars` | Exemplo de valores para variáveis |
 
@@ -44,9 +47,12 @@ terraform apply
 
 | Variável | Descrição | Default |
 |---|---|---|
+| `TFC_AWS_PROVIDER_AUTH` | Autenticação OIDC do Terraform Cloud com AWS | `true` |
 | `project_name` | Nome do projeto | `portfolio` |
 | `environment` | Ambiente (dev, staging, prod) | `prod` |
 | `aws_region` | Região AWS | `us-east-1` |
+| `vpc_cidr` | CIDR block da VPC | `10.0.0.0/16` |
+| `subnet_cidr` | CIDR block da subnet pública | `10.0.1.0/24` |
 | `instance_type` | Tipo da instância EC2 | `t3.micro` |
 | `ami_id` | AMI customizada (vazio = Amazon Linux 2023) | `""` |
 | `key_pair_name` | Key pair para SSH | `""` |
