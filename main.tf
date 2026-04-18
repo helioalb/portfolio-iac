@@ -1,3 +1,10 @@
+module "network" {
+  source              = "./modules/network"
+  vpc_cidr            = var.vpc_cidr
+  project_name        = var.project_name
+  public_subnet_cidr  = var.public_subnet_cidr
+  private_subnet_cidr = var.private_subnet_cidr
+}
 ################################################################################
 # Data Sources
 ################################################################################
@@ -22,85 +29,6 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-################################################################################
-# VPC
-################################################################################
-
-resource "aws_vpc" "this" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = "${var.project_name}-vpc"
-  }
-}
-
-resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.this.id
-  cidr_block              = var.public_subnet_cidr
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  map_public_ip_on_launch = var.associate_public_ip
-
-  tags = {
-    Name = "${var.project_name}-public-subnet"
-  }
-}
-
-resource "aws_subnet" "private" {
-  vpc_id                  = aws_vpc.this.id
-  cidr_block              = var.private_subnet_cidr
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  map_public_ip_on_launch = false
-
-  tags = {
-    Name = "${var.project_name}-private-subnet"
-  }
-}
-
-resource "aws_internet_gateway" "this" {
-  vpc_id = aws_vpc.this.id
-
-  tags = {
-    Name = "${var.project_name}-igw"
-  }
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.this.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.this.id
-  }
-
-  tags = {
-    Name = "${var.project_name}-public-rt"
-  }
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.this.id
-
-  tags = {
-    Name = "${var.project_name}-private-rt"
-  }
-}
-
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.private.id
-  route_table_id = aws_route_table.private.id
-}
-
 ################################################################################
 # Security Group
 ################################################################################
@@ -108,7 +36,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_security_group" "this" {
   name_prefix = "${var.project_name}-ec2-"
   description = "Security group for ${var.project_name} EC2 instance"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = module.network.vpc_id
 
   lifecycle {
     create_before_destroy = true
@@ -170,7 +98,7 @@ locals {
 resource "aws_instance" "this" {
   ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux.id
   instance_type          = var.instance_type
-  subnet_id              = aws_subnet.public.id
+  subnet_id              = module.network.subnet_public_id
   vpc_security_group_ids = [aws_security_group.this.id]
   key_name               = var.key_pair_name != "" ? var.key_pair_name : null
 
