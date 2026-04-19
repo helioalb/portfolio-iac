@@ -8,12 +8,22 @@ variable "project_name" {
   type        = string
 }
 
-variable "public_subnet_cidr" {
-  description = "CIDR block for the public subnet"
-  type        = string
+variable "subnet_cidr_blocks" {
+  description = "CIDR blocks for subnets"
+  type        = list(string)
 }
 
-variable "private_subnet_cidr" {
-  description = "CIDR block for the private subnet"
-  type        = string
+variable "allowed_ssh_cidrs" {
+  description = "List of CIDR blocks allowed to SSH into the instance"
+  type        = list(string)
+}
+
+variable "allowed_http_cidrs" {
+  description = "List of CIDR blocks allowed to access HTTP (port 80)"
+  type        = list(string)
+}
+
+variable "allowed_https_cidrs" {
+  description = "List of CIDR blocks allowed to access HTTPS (port 443)"
+  type        = list(string)
 }

@@ -46,6 +46,12 @@ variable "public_subnet_cidr" {
   default     = "10.0.0.0/26"
 }
 
+variable "subnet_cidr_blocks" {
+  description = "CIDR blocks for subnets"
+  type        = list(string)
+  default     = ["10.0.0.0/26"]
+}
+
 variable "private_subnet_cidr" {
   description = "CIDR block for the private subnet"
   type        = string

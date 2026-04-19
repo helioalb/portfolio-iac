@@ -1,13 +1,12 @@
 module "network" {
   source              = "./modules/network"
-  vpc_cidr            = var.vpc_cidr
   project_name        = var.project_name
-  public_subnet_cidr  = var.public_subnet_cidr
-  private_subnet_cidr = var.private_subnet_cidr
+  vpc_cidr            = var.vpc_cidr
+  subnet_cidr_blocks  = var.subnet_cidr_blocks
+  allowed_http_cidrs  = var.allowed_http_cidrs
+  allowed_https_cidrs = var.allowed_https_cidrs
+  allowed_ssh_cidrs   = var.allowed_ssh_cidrs
 }
-################################################################################
-# Data Sources
-################################################################################
 
 data "aws_ami" "amazon_linux" {
   most_recent = true
@@ -30,64 +29,6 @@ data "aws_ami" "amazon_linux" {
 }
 
 ################################################################################
-# Security Group
-################################################################################
-
-resource "aws_security_group" "this" {
-  name_prefix = "${var.project_name}-ec2-"
-  description = "Security group for ${var.project_name} EC2 instance"
-  vpc_id      = module.network.vpc_id
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = {
-    Name = "${var.project_name}-ec2-sg"
-  }
-}
-
-resource "aws_vpc_security_group_egress_rule" "all_traffic" {
-  security_group_id = aws_security_group.this.id
-  description       = "Allow all outbound traffic"
-  ip_protocol       = "-1"
-  cidr_ipv4         = "0.0.0.0/0"
-}
-
-resource "aws_vpc_security_group_ingress_rule" "http" {
-  for_each = toset(var.allowed_http_cidrs)
-
-  security_group_id = aws_security_group.this.id
-  description       = "Allow HTTP from ${each.value}"
-  from_port         = 80
-  to_port           = 80
-  ip_protocol       = "tcp"
-  cidr_ipv4         = each.value
-}
-
-resource "aws_vpc_security_group_ingress_rule" "https" {
-  for_each = toset(var.allowed_https_cidrs)
-
-  security_group_id = aws_security_group.this.id
-  description       = "Allow HTTPS from ${each.value}"
-  from_port         = 443
-  to_port           = 443
-  ip_protocol       = "tcp"
-  cidr_ipv4         = each.value
-}
-
-resource "aws_vpc_security_group_ingress_rule" "ssh" {
-  for_each = toset(var.allowed_ssh_cidrs)
-
-  security_group_id = aws_security_group.this.id
-  description       = "Allow SSH from ${each.value}"
-  from_port         = 22
-  to_port           = 22
-  ip_protocol       = "tcp"
-  cidr_ipv4         = each.value
-}
-
-################################################################################
 # User Data Script
 ################################################################################
 
@@ -98,8 +39,8 @@ locals {
 resource "aws_instance" "this" {
   ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux.id
   instance_type          = var.instance_type
-  subnet_id              = module.network.subnet_public_id
-  vpc_security_group_ids = [aws_security_group.this.id]
+  subnet_id              = module.network.subnet_public_ids[0]
+  vpc_security_group_ids = [module.network.ec2_security_group_id]
   key_name               = var.key_pair_name != "" ? var.key_pair_name : null
 
   associate_public_ip_address = var.associate_public_ip
