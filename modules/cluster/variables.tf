@@ -52,3 +52,8 @@ variable "root_volume_type" {
   description = "Type of the root EBS volume"
   type        = string
 }
+
+variable "subnet_ids" {
+  description = "Subnet ids"
+  type        = list(string)
+}

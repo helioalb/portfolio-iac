@@ -16,6 +16,7 @@ module "cluster" {
   instance_type       = var.instance_type
   instance_count      = var.instance_count
   subnet_public_ids   = module.network.subnet_public_ids
+  subnet_ids          = module.network.subnet_public_ids
   security_groups     = [module.network.ec2_security_group_id]
   key_pair_name       = var.key_pair_name
   associate_public_ip = var.associate_public_ip
